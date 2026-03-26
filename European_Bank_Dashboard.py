@@ -1,11 +1,12 @@
 """
-European Bank Customer Churn Analytics Dashboard
-=================================================
-A comprehensive Streamlit dashboard for customer retention intelligence.
+European Bank Customer Churn Intelligence Platform v3
+======================================================
+Recruiter-grade dark analytics dashboard.
+Premium glassmorphism + neon accent design system.
 
 Run with:
     pip install streamlit pandas plotly numpy
-    streamlit run European_Bank_Dashboard.py
+    streamlit run European_Bank_Dashboard_v3.py
 """
 
 import streamlit as st
@@ -16,851 +17,1285 @@ from plotly.subplots import make_subplots
 import numpy as np
 
 # ─────────────────────────────────────────────
-# Page Configuration
+# Page Config
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="European Bank | Churn Intelligence",
+    page_title="EuroBank · Churn Intelligence",
     page_icon="🏦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # ─────────────────────────────────────────────
-# Custom CSS Styling
+# Design System
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Main palette */
-    :root {
-        --navy: #1F4E79;
-        --blue: #2E75B6;
-        --light-blue: #D6E4F0;
-        --danger: #C00000;
-        --warn: #BA7517;
-        --ok: #3A7D44;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-    /* Page background */
-    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1400px; }
+:root {
+    /* Backgrounds */
+    --bg-base:   #020408;
+    --bg-1:      #060c14;
+    --bg-2:      #0a1220;
+    --bg-3:      #0f1a2e;
+    --bg-4:      #162338;
+    --bg-glass:  rgba(10,18,32,0.7);
+    --bg-glass2: rgba(15,26,46,0.6);
 
-    /* Header banner */
-    .dash-header {
-        background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
-        border-radius: 12px;
-        padding: 24px 32px;
-        margin-bottom: 1.5rem;
-        color: white;
-    }
-    .dash-header h1 { color: white; font-size: 1.8rem; margin: 0; font-weight: 700; }
-    .dash-header p  { color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 0.9rem; }
+    /* Borders */
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.1);
+    --border3:   rgba(255,255,255,0.16);
 
-    /* KPI cards */
-    .kpi-card {
-        background: white;
-        border: 1px solid #e8e8e8;
-        border-radius: 10px;
-        padding: 18px 20px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        height: 100%;
-    }
-    .kpi-label  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #888; margin-bottom: 6px; }
-    .kpi-value  { font-size: 2rem; font-weight: 700; line-height: 1; }
-    .kpi-sub    { font-size: 0.75rem; color: #999; margin-top: 4px; }
-    .kpi-danger { color: #C00000; }
-    .kpi-warn   { color: #BA7517; }
-    .kpi-ok     { color: #3A7D44; }
-    .kpi-blue   { color: #2E75B6; }
+    /* Neon Accents */
+    --cyan:      #00e5ff;
+    --cyan-dim:  rgba(0,229,255,0.12);
+    --cyan-glow: 0 0 20px rgba(0,229,255,0.3), 0 0 60px rgba(0,229,255,0.1);
 
-    /* Section dividers */
-    .section-header {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #1F4E79;
-        border-bottom: 2px solid #2E75B6;
-        padding-bottom: 6px;
-        margin: 1.5rem 0 1rem;
-    }
+    --rose:      #ff2d6b;
+    --rose-dim:  rgba(255,45,107,0.12);
+    --rose-glow: 0 0 20px rgba(255,45,107,0.3);
 
-    /* Insight boxes */
-    .insight-box {
-        background: #EBF5FB;
-        border-left: 4px solid #2E75B6;
-        border-radius: 0 8px 8px 0;
-        padding: 12px 16px;
-        margin: 1rem 0;
-        font-size: 0.88rem;
-        color: #1a1a1a;
-        line-height: 1.6;
-    }
-    .alert-box {
-        background: #FFF8E1;
-        border-left: 4px solid #BA7517;
-        border-radius: 0 8px 8px 0;
-        padding: 12px 16px;
-        margin: 1rem 0;
-        font-size: 0.88rem;
-        color: #1a1a1a;
-        line-height: 1.6;
-    }
-    .danger-box {
-        background: #FDECEA;
-        border-left: 4px solid #C00000;
-        border-radius: 0 8px 8px 0;
-        padding: 12px 16px;
-        margin: 1rem 0;
-        font-size: 0.88rem;
-        color: #1a1a1a;
-        line-height: 1.6;
-    }
+    --amber:     #ffb300;
+    --amber-dim: rgba(255,179,0,0.12);
+    --amber-glow:0 0 20px rgba(255,179,0,0.3);
 
-    /* Profile pills */
-    .profile-pill {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
+    --violet:    #b575ff;
+    --violet-dim:rgba(181,117,255,0.12);
 
-    /* Sidebar styling */
-    .css-1d391kg { background: #F4F7FB; }
+    --emerald:   #00e676;
+    --emerald-dim:rgba(0,230,118,0.12);
 
-    /* Metric delta override */
-    [data-testid="stMetricDelta"] { font-size: 0.78rem; }
+    /* Text */
+    --t1: #f0f6ff;
+    --t2: #7a9cc4;
+    --t3: #3a5070;
+    --t4: #1e3050;
 
-    /* Tab styling */
-    .stTabs [data-baseweb="tab"] { font-weight: 600; }
+    /* Fonts */
+    --font-display: 'Outfit', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+.stApp {
+    background: var(--bg-base) !important;
+    font-family: var(--font-body) !important;
+    background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,229,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(181,117,255,0.04) 0%, transparent 60%);
+}
+.stApp > header { background: transparent !important; }
+.block-container { padding-top: 1.5rem !important; }
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background: var(--bg-1) !important;
+    border-right: 1px solid var(--border2) !important;
+}
+[data-testid="stSidebar"] * {
+    font-family: var(--font-body) !important;
+}
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] span {
+    color: var(--t2) !important;
+    font-size: 12px !important;
+}
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: var(--t1) !important;
+    font-family: var(--font-display) !important;
+}
+[data-testid="stSidebar"] .stMultiSelect > div > div,
+[data-testid="stSidebar"] .stSelectbox > div > div {
+    background: var(--bg-3) !important;
+    border: 1px solid var(--border2) !important;
+    color: var(--t1) !important;
+    border-radius: 10px !important;
+}
+[data-testid="stSidebar"] [data-baseweb="tag"] {
+    background: var(--cyan-dim) !important;
+    border: 1px solid rgba(0,229,255,0.25) !important;
+    color: var(--cyan) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 10px !important;
+    border-radius: 4px !important;
+}
+[data-testid="stSidebar"] hr { border-color: var(--border2) !important; }
+[data-testid="stSidebar"] [data-testid="stRadio"] span,
+[data-testid="stSidebar"] [data-testid="stRadio"] > label { color: var(--t2) !important; }
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    background: var(--cyan) !important;
+    border-color: var(--cyan) !important;
+    box-shadow: var(--cyan-glow) !important;
+}
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {
+    background: rgba(6,12,20,0.9) !important;
+    border-bottom: 1px solid var(--border2) !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    backdrop-filter: blur(12px) !important;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    color: var(--t3) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 14px 22px !important;
+    transition: all 0.25s ease !important;
+    border-radius: 0 !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--t1) !important;
+    background: rgba(255,255,255,0.03) !important;
+}
+.stTabs [aria-selected="true"] {
+    color: var(--cyan) !important;
+    border-bottom-color: var(--cyan) !important;
+    background: rgba(0,229,255,0.04) !important;
+    text-shadow: 0 0 20px rgba(0,229,255,0.5) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+.stTabs [data-baseweb="tab-panel"] {
+    background: transparent !important;
+    padding: 24px 0 !important;
+}
+
+/* ── Text ── */
+.stMarkdown p, .stMarkdown li { color: var(--t2) !important; font-family: var(--font-body) !important; }
+h1,h2,h3,h4 { color: var(--t1) !important; font-family: var(--font-display) !important; }
+[data-testid="stMetricValue"] { color: var(--t1) !important; font-family: var(--font-mono) !important; }
+[data-testid="stMetricLabel"] { color: var(--t3) !important; font-size: 11px !important; font-family: var(--font-mono) !important; }
+[data-testid="stMetricDelta"]  { font-size: 11px !important; font-family: var(--font-mono) !important; }
+[data-testid="stDataFrame"] > div {
+    background: var(--bg-2) !important;
+    border: 1px solid var(--border2) !important;
+    border-radius: 14px !important;
+}
+.stCaption,[data-testid="stCaptionContainer"]{color:var(--t3)!important;font-family:var(--font-mono)!important;font-size:11px!important;}
+
+/* ══ CUSTOM COMPONENTS ══ */
+
+/* Hero Header */
+.hero {
+    background: linear-gradient(135deg, #060c14 0%, #0a1525 40%, #080f1e 100%);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 32px 40px 28px;
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+        radial-gradient(ellipse 50% 80% at 0% 50%, rgba(0,229,255,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 100% 50%, rgba(181,117,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+}
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+    position: relative;
+}
+.hero-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(0,229,255,0.4);
+    animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+.hero-title {
+    font-family: var(--font-display) !important;
+    font-size: clamp(1.6rem, 3vw, 2.4rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.03em !important;
+    color: var(--t1) !important;
+    margin: 0 0 6px !important;
+    position: relative;
+}
+.hero-title em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--t3);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+    position: relative;
+}
+.hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    position: relative;
+}
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    border: 1px solid;
+    transition: all 0.2s;
+}
+.pill-default { background: var(--bg-3); border-color: var(--border2); color: var(--t2); }
+.pill-cyan    { background: var(--cyan-dim); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+.pill-rose    { background: var(--rose-dim); border-color: rgba(255,45,107,0.3); color: var(--rose); }
+.pill-amber   { background: var(--amber-dim); border-color: rgba(255,179,0,0.3); color: var(--amber); }
+.pill-emerald { background: var(--emerald-dim); border-color: rgba(0,230,118,0.3); color: var(--emerald); }
+
+/* KPI Cards */
+.kpi {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.25s;
+    height: 100%;
+}
+.kpi:hover { border-color: var(--border3); transform: translateY(-3px); }
+.kpi::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px; width: var(--bar, 50%);
+    background: var(--accent, var(--cyan));
+    border-radius: 0 2px 0 0;
+    box-shadow: 0 0 12px var(--accent, var(--cyan));
+}
+.kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--t3);
+    margin-bottom: 10px;
+}
+.kpi-value {
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent, var(--cyan));
+    letter-spacing: -0.02em;
+}
+.kpi-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--t3);
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+}
+
+/* Section Headers */
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.section-bar {
+    width: 3px; height: 16px;
+    background: linear-gradient(180deg, var(--cyan), var(--violet));
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0,229,255,0.4);
+}
+.section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--t3);
+}
+
+/* Insight Cards */
+.insight {
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    line-height: 1.7;
+    border-left: 3px solid;
+    margin: 10px 0;
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s;
+}
+.insight:hover { transform: translateX(3px); }
+.insight-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+    display: block;
+}
+.ins-cyan    { background: var(--cyan-dim);    border-color: var(--cyan);    color: rgba(0,229,255,0.7); }
+.ins-cyan    .insight-title { color: var(--cyan); }
+.ins-rose    { background: var(--rose-dim);    border-color: var(--rose);    color: rgba(255,45,107,0.7); }
+.ins-rose    .insight-title { color: var(--rose); }
+.ins-amber   { background: var(--amber-dim);   border-color: var(--amber);   color: rgba(255,179,0,0.7); }
+.ins-amber   .insight-title { color: var(--amber); }
+.ins-emerald { background: var(--emerald-dim); border-color: var(--emerald); color: rgba(0,230,118,0.7); }
+.ins-emerald .insight-title { color: var(--emerald); }
+.ins-violet  { background: var(--violet-dim);  border-color: var(--violet);  color: rgba(181,117,255,0.7); }
+.ins-violet  .insight-title { color: var(--violet); }
+
+/* Risk Matrix */
+.risk-cell {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+}
+.risk-cell:hover { border-color: var(--border3); transform: translateY(-2px); }
+.risk-cell::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--rc-color, var(--cyan));
+    box-shadow: 0 0 14px var(--rc-color, var(--cyan));
+}
+.rc-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--t3); margin-bottom: 8px; }
+.rc-val   { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; }
+.rc-sub   { font-family: var(--font-mono); font-size: 10px; color: var(--t3); margin-top: 6px; }
+
+/* Tag badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    border: 1px solid;
+}
+.badge-ok     { background: var(--emerald-dim); color: var(--emerald); border-color: rgba(0,230,118,0.3); }
+.badge-warn   { background: var(--amber-dim);   color: var(--amber);   border-color: rgba(255,179,0,0.3); }
+.badge-danger { background: var(--rose-dim);    color: var(--rose);    border-color: rgba(255,45,107,0.3); }
+.badge-info   { background: var(--cyan-dim);    color: var(--cyan);    border-color: rgba(0,229,255,0.3); }
+
+/* Sidebar */
+.sb-brand {
+    text-align: center;
+    padding: 20px 0 12px;
+}
+.sb-logo {
+    font-size: 2.2rem;
+    display: block;
+    filter: drop-shadow(0 0 16px rgba(0,229,255,0.5));
+}
+.sb-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--t1);
+    letter-spacing: -0.02em;
+    margin-top: 8px;
+}
+.sb-ver {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--t3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+.sb-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.sb-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.08em; }
+.sb-stat-val   { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.sb-filter-head { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t3); padding: 14px 0 6px; }
+
+/* Divider */
+.div { height: 1px; background: var(--border); margin: 12px 0; }
+
+/* Footer */
+.dash-footer {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--t4);
+    text-transform: uppercase;
+    padding: 28px 0 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+}
+
+/* Geo flag row */
+.geo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+.geo-row:last-child { border-bottom: none; }
+.geo-name { font-family: var(--font-body); font-size: 13px; color: var(--t1); font-weight: 500; }
+.geo-badges { display: flex; gap: 6px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# Data Loading & Feature Engineering
+# Plotly theme
+# ─────────────────────────────────────────────
+DARK_BG    = "#060c14"
+GRID       = "rgba(255,255,255,0.04)"
+TICK_CLR   = "#3a5070"
+FONT_MONO  = "IBM Plex Mono, monospace"
+FONT_DISP  = "Outfit, sans-serif"
+
+CYAN    = "#00e5ff"
+ROSE    = "#ff2d6b"
+AMBER   = "#ffb300"
+VIOLET  = "#b575ff"
+EMERALD = "#00e676"
+ORANGE  = "#ff6d00"
+
+def base_layout(h=300, margin=None):
+    m = margin or dict(l=14, r=14, t=20, b=14)
+    return dict(
+        height=h, margin=m,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor=DARK_BG,
+        font=dict(family=FONT_MONO, color=TICK_CLR, size=11),
+        xaxis=dict(
+            showgrid=True, gridcolor=GRID, gridwidth=1,
+            zeroline=False, showline=False,
+            tickfont=dict(family=FONT_MONO, color=TICK_CLR, size=10),
+        ),
+        yaxis=dict(
+            showgrid=True, gridcolor=GRID, gridwidth=1,
+            zeroline=False, showline=False,
+            tickfont=dict(family=FONT_MONO, color=TICK_CLR, size=10),
+        ),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)", bordercolor=GRID, borderwidth=1,
+            font=dict(family=FONT_MONO, color="#3a5070", size=10),
+        ),
+    )
+
+def alpha(hex_color, a=0.25):
+    h = hex_color.lstrip('#')
+    r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+    return f"rgba({r},{g},{b},{a})"
+
+def rate_color(r):
+    if r >= 30: return ROSE
+    if r >= 20: return AMBER
+    return EMERALD
+
+PLOTLY_CFG = {"displayModeBar": False, "responsive": True}
+
+# ─────────────────────────────────────────────
+# Helper HTML builders
+# ─────────────────────────────────────────────
+def kpi(label, value, meta="", accent=CYAN, bar="50%"):
+    return f"""<div class="kpi" style="--accent:{accent};--bar:{bar}">
+  <div class="kpi-label">{label}</div>
+  <div class="kpi-value">{value}</div>
+  <div class="kpi-meta">{meta}</div>
+</div>"""
+
+def sec(title):
+    return f"""<div class="section-head">
+  <div class="section-bar"></div>
+  <div class="section-label">{title}</div>
+</div>"""
+
+def insight(title, body, cls="ins-cyan"):
+    return f"""<div class="insight {cls}">
+  <span class="insight-title">{title}</span>{body}
+</div>"""
+
+def risk_cell(label, val, sub1, sub2, color):
+    return f"""<div class="risk-cell" style="--rc-color:{color}">
+  <div class="rc-label">{label}</div>
+  <div class="rc-val" style="color:{color}">{val}</div>
+  <div class="rc-sub">{sub1}</div>
+  <div class="rc-sub" style="color:{color};opacity:0.7">{sub2}</div>
+</div>"""
+
+# ─────────────────────────────────────────────
+# Data
 # ─────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    """Load and engineer features from the European Bank CSV."""
-    # Try multiple paths
-    for path in ["European_Bank.csv", "/mnt/project/European_Bank.csv", "/mnt/user-data/uploads/European_Bank.csv"]:
+    for path in ["European_Bank.csv", "/mnt/project/European_Bank.csv",
+                 "/mnt/user-data/uploads/European_Bank.csv"]:
         try:
-            df = pd.read_csv(path)
-            break
+            df = pd.read_csv(path); break
         except FileNotFoundError:
             continue
     else:
-        # Generate synthetic data for demo if file not found
         np.random.seed(42)
         n = 10000
         df = pd.DataFrame({
-            "CustomerId": range(1, n+1),
-            "CreditScore": np.random.randint(350, 851, n),
-            "Geography": np.random.choice(["France","Germany","Spain"], n, p=[0.5, 0.25, 0.25]),
-            "Gender": np.random.choice(["Male","Female"], n),
-            "Age": np.clip(np.random.normal(38, 10, n).astype(int), 18, 80),
-            "Tenure": np.random.randint(0, 11, n),
-            "Balance": np.where(np.random.random(n) < 0.37, 0, np.random.uniform(10000, 250000, n)),
-            "NumOfProducts": np.random.choice([1,2,3,4], n, p=[0.5, 0.46, 0.027, 0.006]),
-            "HasCrCard": np.random.choice([0,1], n, p=[0.3, 0.7]),
-            "IsActiveMember": np.random.choice([0,1], n, p=[0.49, 0.51]),
-            "EstimatedSalary": np.random.uniform(10000, 200000, n),
-            "Exited": np.random.choice([0,1], n, p=[0.8, 0.2]),
+            "CustomerId":      range(1, n+1),
+            "CreditScore":     np.random.randint(350, 851, n),
+            "Geography":       np.random.choice(["France","Germany","Spain"], n, p=[0.5,0.25,0.25]),
+            "Gender":          np.random.choice(["Male","Female"], n),
+            "Age":             np.clip(np.random.normal(38,10,n).astype(int),18,80),
+            "Tenure":          np.random.randint(0,11,n),
+            "Balance":         np.where(np.random.random(n)<0.37, 0, np.random.uniform(10000,250000,n)),
+            "NumOfProducts":   np.random.choice([1,2,3,4],n,p=[0.5,0.46,0.027,0.006]),
+            "HasCrCard":       np.random.choice([0,1],n,p=[0.3,0.7]),
+            "IsActiveMember":  np.random.choice([0,1],n,p=[0.49,0.51]),
+            "EstimatedSalary": np.random.uniform(10000,200000,n),
+            "Exited":          np.random.choice([0,1],n,p=[0.8,0.2]),
         })
 
-    # Feature engineering
-    df["Exited"] = df["Exited"].astype(int)
+    df["Exited"]         = df["Exited"].astype(int)
     df["IsActiveMember"] = df["IsActiveMember"].astype(int)
-    df["HasCrCard"] = df["HasCrCard"].astype(int)
+    df["HasCrCard"]      = df["HasCrCard"].astype(int)
+    df["RSI"]            = df["IsActiveMember"] + df["NumOfProducts"].clip(upper=2) + df["HasCrCard"]
 
-    # RSI: Relationship Strength Index
-    df["RSI"] = df["IsActiveMember"] + df["NumOfProducts"].clip(upper=2) + df["HasCrCard"]
-
-    # Engagement profile
     def classify(row):
-        active = row["IsActiveMember"] == 1
-        prods = row["NumOfProducts"]
-        bal = row["Balance"]
-        if active and prods >= 2:       return "Active Engaged"
-        elif not active and prods <= 1: return "Inactive Disengaged"
-        elif active and prods == 1:     return "Active Low-Product"
-        elif not active and bal > 100000: return "Inactive High-Balance"
-        else:                           return "Other"
+        a = row["IsActiveMember"] == 1
+        p = row["NumOfProducts"]
+        b = row["Balance"]
+        if   a and p >= 2:         return "Active Engaged"
+        elif not a and p <= 1:     return "Inactive Disengaged"
+        elif a and p == 1:         return "Active Low-Product"
+        elif not a and b > 100000: return "Inactive High-Balance"
+        else:                      return "Other"
 
     df["EngagementProfile"] = df.apply(classify, axis=1)
-
-    # Age bucket
-    bins  = [0, 29, 39, 49, 59, 120]
-    labels = ["<30", "30-39", "40-49", "50-59", "60+"]
-    df["AgeBand"] = pd.cut(df["Age"], bins=bins, labels=labels)
-
-    # Balance bucket
-    def bal_bucket(b):
-        if b == 0:          return "Zero"
-        elif b < 50000:     return "€1–50K"
-        elif b < 100000:    return "€50–100K"
-        elif b < 150000:    return "€100–150K"
-        else:               return "€150K+"
-
-    df["BalanceBand"] = df["Balance"].apply(bal_bucket)
-
-    # Sticky / at-risk flags
-    df["IsSticky"]  = ((df["IsActiveMember"] == 1) & (df["NumOfProducts"] >= 2) & (df["HasCrCard"] == 1)).astype(int)
-    df["IsAtRisk"]  = ((df["IsActiveMember"] == 0) & (df["Balance"] > 100000)).astype(int)
-
-    # Credit score band
-    cs_bins   = [0, 499, 599, 699, 799, 1000]
-    cs_labels = ["<500", "500–599", "600–699", "700–799", "800+"]
-    df["CSBand"] = pd.cut(df["CreditScore"], bins=cs_bins, labels=cs_labels)
-
+    df["AgeBand"]    = pd.cut(df["Age"],       bins=[0,29,39,49,59,120], labels=["<30","30–39","40–49","50–59","60+"])
+    df["BalanceBand"]= df["Balance"].apply(lambda b: "Zero" if b==0 else "€1–50K" if b<50000 else "€50–100K" if b<100000 else "€100–150K" if b<150000 else "€150K+")
+    df["IsSticky"]   = ((df["IsActiveMember"]==1)&(df["NumOfProducts"]>=2)&(df["HasCrCard"]==1)).astype(int)
+    df["IsAtRisk"]   = ((df["IsActiveMember"]==0)&(df["Balance"]>100000)).astype(int)
+    df["CSBand"]     = pd.cut(df["CreditScore"], bins=[0,499,599,699,799,1000], labels=["<500","500–599","600–699","700–799","800+"])
     return df
 
-# ─────────────────────────────────────────────
-# Helper functions
-# ─────────────────────────────────────────────
-COLOR_MAP = {
-    "ok":     "#3A7D44",
-    "warn":   "#BA7517",
-    "danger": "#C00000",
-    "blue":   "#2E75B6",
-    "navy":   "#1F4E79",
-    "gray":   "#6C757D",
-}
-
-PROFILE_COLORS = {
-    "Active Engaged":        "#3A7D44",
-    "Other":                 "#6C757D",
-    "Active Low-Product":    "#BA7517",
-    "Inactive High-Balance": "#E24B4A",
-    "Inactive Disengaged":   "#C00000",
-}
-
-def churn_rate(df):
-    """Return churn rate as a percentage."""
-    return df["Exited"].mean() * 100
-
-def churn_by(df, col, sort_by_churn=False):
-    """Return churn rate grouped by a column."""
-    g = df.groupby(col)["Exited"].agg(["sum", "count"]).reset_index()
-    g.columns = [col, "Churned", "Total"]
+def churn_rate(df):  return df["Exited"].mean() * 100
+def churn_by(df, col):
+    g = df.groupby(col)["Exited"].agg(["sum","count"]).reset_index()
+    g.columns = [col,"Churned","Total"]
     g["ChurnRate"] = g["Churned"] / g["Total"] * 100
-    if sort_by_churn:
-        g = g.sort_values("ChurnRate", ascending=False)
     return g
 
-def color_by_rate(rate):
-    if rate < 15:   return COLOR_MAP["ok"]
-    elif rate < 25: return COLOR_MAP["warn"]
-    else:           return COLOR_MAP["danger"]
-
-def kpi_html(label, value, sub="", color_class="kpi-blue"):
-    return f"""
-    <div class="kpi-card">
-        <div class="kpi-label">{label}</div>
-        <div class="kpi-value {color_class}">{value}</div>
-        <div class="kpi-sub">{sub}</div>
-    </div>"""
-
-# ─────────────────────────────────────────────
-# Load data
-# ─────────────────────────────────────────────
 df_full = load_data()
 
 # ─────────────────────────────────────────────
-# SIDEBAR — Filters
+# Sidebar
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🔍 Filters")
-    st.markdown("---")
+    st.markdown("""
+    <div class="sb-brand">
+      <span class="sb-logo">🏦</span>
+      <div class="sb-name">EuroBank</div>
+      <div class="sb-ver">Churn Intelligence · v3</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("**Geography**")
-    geographies = st.multiselect(
-        "Select countries", options=df_full["Geography"].unique().tolist(),
-        default=df_full["Geography"].unique().tolist(), label_visibility="collapsed"
+    cr_full = df_full["Exited"].mean() * 100
+    st.markdown(f"""
+    <div class="div"></div>
+    <div class="sb-stat">
+      <span class="sb-stat-label">Portfolio</span>
+      <span class="sb-stat-val" style="color:var(--t1)">{len(df_full):,}</span>
+    </div>
+    <div class="sb-stat">
+      <span class="sb-stat-label">Churn Rate</span>
+      <span class="sb-stat-val" style="color:var(--rose)">{cr_full:.1f}%</span>
+    </div>
+    <div class="div"></div>
+    <div class="sb-filter-head">▸ Filters</div>
+    """, unsafe_allow_html=True)
+
+    geographies = st.multiselect("Geography", options=df_full["Geography"].unique().tolist(), default=df_full["Geography"].unique().tolist())
+    genders     = st.multiselect("Gender",    options=df_full["Gender"].unique().tolist(),    default=df_full["Gender"].unique().tolist())
+    profiles    = st.multiselect("Engagement Profile",
+        options=["Active Engaged","Active Low-Product","Other","Inactive High-Balance","Inactive Disengaged"],
+        default=["Active Engaged","Active Low-Product","Other","Inactive High-Balance","Inactive Disengaged"],
     )
+    prod_range   = st.slider("Products", 1, 4, (1, 4))
+    bal_min, bal_max = st.slider("Balance (€)", 0, 250000, (0, 250000), step=5000, format="€%d")
+    age_min, age_max = st.slider("Age", 18, 80, (18, 80))
+    cs_min, cs_max   = st.slider("Credit Score", 350, 850, (350, 850))
+    st.markdown('<div class="div"></div>', unsafe_allow_html=True)
+    active_filter = st.radio("Activity Status", ["All","Active only","Inactive only"])
+    st.markdown('<div class="div"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:var(--font-mono);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:0.1em;text-align:center;padding-top:8px">10,000 Customers · France · Germany · Spain · FY 2025</div>', unsafe_allow_html=True)
 
-    st.markdown("**Gender**")
-    genders = st.multiselect(
-        "Select gender", options=df_full["Gender"].unique().tolist(),
-        default=df_full["Gender"].unique().tolist(), label_visibility="collapsed"
-    )
-
-    st.markdown("**Engagement Profile**")
-    profiles = st.multiselect(
-        "Select profiles",
-        options=["Active Engaged", "Active Low-Product", "Other", "Inactive High-Balance", "Inactive Disengaged"],
-        default=["Active Engaged", "Active Low-Product", "Other", "Inactive High-Balance", "Inactive Disengaged"],
-        label_visibility="collapsed"
-    )
-
-    st.markdown("**Product Count**")
-    prod_range = st.slider("Number of products", 1, 4, (1, 4))
-
-    st.markdown("**Account Balance (€)**")
-    bal_min, bal_max = st.slider(
-        "Balance range", min_value=0, max_value=250000,
-        value=(0, 250000), step=5000, format="€%d", label_visibility="collapsed"
-    )
-
-    st.markdown("**Age Range**")
-    age_min, age_max = st.slider("Age", 18, 80, (18, 80), label_visibility="collapsed")
-
-    st.markdown("**Credit Score**")
-    cs_min, cs_max = st.slider("Credit Score", 350, 850, (350, 850), label_visibility="collapsed")
-
-    st.markdown("---")
-    st.markdown("**Activity Status**")
-    active_filter = st.radio("Members", ["All", "Active only", "Inactive only"], horizontal=False)
-
-    st.markdown("---")
-    st.caption("🏦 European Bank Churn Intelligence Platform")
-    st.caption("Dataset: 10,000 customers · FY 2024")
-
-# Apply filters
+# ── Apply Filters ──
 df = df_full.copy()
-if geographies:    df = df[df["Geography"].isin(geographies)]
-if genders:        df = df[df["Gender"].isin(genders)]
-if profiles:       df = df[df["EngagementProfile"].isin(profiles)]
-df = df[df["NumOfProducts"].between(prod_range[0], prod_range[1])]
+if geographies: df = df[df["Geography"].isin(geographies)]
+if genders:     df = df[df["Gender"].isin(genders)]
+if profiles:    df = df[df["EngagementProfile"].isin(profiles)]
+df = df[df["NumOfProducts"].between(*prod_range)]
 df = df[df["Balance"].between(bal_min, bal_max)]
 df = df[df["Age"].between(age_min, age_max)]
 df = df[df["CreditScore"].between(cs_min, cs_max)]
-if active_filter == "Active only":   df = df[df["IsActiveMember"] == 1]
-elif active_filter == "Inactive only": df = df[df["IsActiveMember"] == 0]
+if active_filter == "Active only":   df = df[df["IsActiveMember"]==1]
+elif active_filter == "Inactive only": df = df[df["IsActiveMember"]==0]
+cr_now = churn_rate(df)
 
 # ─────────────────────────────────────────────
-# HEADER
+# Hero Header
 # ─────────────────────────────────────────────
+cr_pill = "pill-rose" if cr_now > 25 else "pill-amber" if cr_now > 15 else "pill-emerald"
 st.markdown(f"""
-<div class="dash-header">
-    <h1>🏦 European Bank — Churn Intelligence Platform</h1>
-    <p>Customer Retention & Engagement Analytics  ·  {len(df):,} customers in view  ·  Filtered from {len(df_full):,} total records</p>
+<div class="hero">
+  <div class="hero-eyebrow">
+    <span class="hero-dot"></span>
+    Live Analytics · Real-Time Filters Active
+  </div>
+  <div class="hero-title">European Bank — <em>Churn Intelligence</em></div>
+  <div class="hero-sub">
+    {len(df):,} customers in view &nbsp;·&nbsp; Filtered from {len(df_full):,} total &nbsp;·&nbsp;
+    France &middot; Germany &middot; Spain &nbsp;·&nbsp; FY 2025
+  </div>
+  <div class="hero-pills">
+    <span class="pill pill-default">3 Markets</span>
+    <span class="pill pill-default">14 Variables</span>
+    <span class="pill pill-rose">⚠&nbsp; {df['Exited'].sum():,} Churned</span>
+    <span class="pill pill-emerald">✓&nbsp; {(df['Exited']==0).sum():,} Retained</span>
+    <span class="pill {cr_pill}">{cr_now:.1f}% Churn Rate</span>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# TABS
+# Tabs
 # ─────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Overview",
-    "👥 Engagement",
-    "📦 Product Utilization",
-    "💰 Financial Analysis",
-    "🛡️ Retention Strength",
+    "  01 · Overview  ",
+    "  02 · Engagement  ",
+    "  03 · Products  ",
+    "  04 · Financial  ",
+    "  05 · Retention  ",
 ])
 
+ENG_COLORS = {
+    "Active Engaged":       EMERALD,
+    "Other":                CYAN,
+    "Active Low-Product":   AMBER,
+    "Inactive High-Balance":ORANGE,
+    "Inactive Disengaged":  ROSE,
+}
+
 # ══════════════════════════════════════════════
-# TAB 1: OVERVIEW
+# TAB 1 — OVERVIEW
 # ══════════════════════════════════════════════
 with tab1:
-    # KPI row
-    cr = churn_rate(df)
-    active_pct = df["IsActiveMember"].mean() * 100
-    churned_bal = df[df["Exited"] == 1]["Balance"].mean()
-    retained_bal = df[df["Exited"] == 0]["Balance"].mean()
-    cr_color = "kpi-danger" if cr > 25 else "kpi-warn" if cr > 15 else "kpi-ok"
+    churned_t1  = df[df["Exited"]==1]
+    retained_t1 = df[df["Exited"]==0]
+    active_pct  = df["IsActiveMember"].mean() * 100
+    cr_accent   = ROSE if cr_now>25 else AMBER if cr_now>15 else EMERALD
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.markdown(kpi_html("Total Customers", f"{len(df):,}", "In current filter", "kpi-blue"), unsafe_allow_html=True)
-    c2.markdown(kpi_html("Churn Rate", f"{cr:.1f}%", f"{df['Exited'].sum():,} exited", cr_color), unsafe_allow_html=True)
-    c3.markdown(kpi_html("Active Members", f"{active_pct:.1f}%", f"{df['IsActiveMember'].sum():,} active", "kpi-ok"), unsafe_allow_html=True)
-    c4.markdown(kpi_html("Avg Balance — Churned", f"€{churned_bal:,.0f}", "vs retained below", "kpi-warn"), unsafe_allow_html=True)
-    c5.markdown(kpi_html("Avg Balance — Retained", f"€{retained_bal:,.0f}", f"Gap: €{churned_bal - retained_bal:,.0f}", "kpi-ok"), unsafe_allow_html=True)
+    k1,k2,k3,k4,k5,k6 = st.columns(6)
+    k1.markdown(kpi("Total Customers", f"{len(df):,}", "In current view", CYAN, "100%"), unsafe_allow_html=True)
+    k2.markdown(kpi("Churn Rate", f"{cr_now:.1f}%", f"{df['Exited'].sum():,} exited", cr_accent, f"{cr_now:.0f}%"), unsafe_allow_html=True)
+    k3.markdown(kpi("Active Members", f"{active_pct:.1f}%", f"{df['IsActiveMember'].sum():,} active", EMERALD, f"{active_pct:.0f}%"), unsafe_allow_html=True)
+    k4.markdown(kpi("Avg Age — Churned", f"{churned_t1['Age'].mean():.1f}", f"vs {retained_t1['Age'].mean():.1f} retained", AMBER, "70%"), unsafe_allow_html=True)
+    k5.markdown(kpi("Germany Churn", f"{df[df['Geography']=='Germany']['Exited'].mean()*100:.1f}%", "Highest market", ROSE, "85%"), unsafe_allow_html=True)
+    k6.markdown(kpi("Female Churn", f"{df[df['Gender']=='Female']['Exited'].mean()*100:.1f}%", "vs male baseline", VIOLET, "60%"), unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    col1, col2 = st.columns(2)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Geographic & Demographic Intelligence"), unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1.2, 1.2, 1])
 
     with col1:
-        st.markdown('<div class="section-header">Churn Rate by Geography</div>', unsafe_allow_html=True)
-        geo_df = churn_by(df, "Geography", sort_by_churn=True)
-        colors = [color_by_rate(r) for r in geo_df["ChurnRate"]]
-        fig = go.Figure(go.Bar(
-            x=geo_df["ChurnRate"], y=geo_df["Geography"], orientation="h",
-            marker_color=colors, text=[f"{r:.1f}%" for r in geo_df["ChurnRate"]],
-            textposition="outside", textfont_size=13
-        ))
-        fig.update_layout(
-            height=260, margin=dict(l=10, r=40, t=10, b=10),
-            xaxis_title="Churn Rate (%)", yaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            xaxis=dict(gridcolor="#f0f0f0", range=[0, geo_df["ChurnRate"].max() * 1.25])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        geo_df = churn_by(df, "Geography").sort_values("ChurnRate", ascending=False)
+        fig = go.Figure()
+        for _, row in geo_df.iterrows():
+            c = rate_color(row["ChurnRate"])
+            fig.add_trace(go.Bar(
+                x=[row["Geography"]], y=[row["ChurnRate"]],
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=1.5,
+                marker_cornerradius=7,
+                text=[f"{row['ChurnRate']:.1f}%"], textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=12, weight=600),
+                showlegend=False,
+                hovertemplate=f"<b>{row['Geography']}</b><br>Churn: {row['ChurnRate']:.1f}%<br>Customers: {row['Total']:,}<extra></extra>",
+            ))
+        fig.update_layout(**base_layout(290), yaxis_ticksuffix="%", yaxis_range=[0,44])
+        st.markdown(sec("Churn by Geography"), unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CFG)
 
     with col2:
-        st.markdown('<div class="section-header">Churn Rate by Gender</div>', unsafe_allow_html=True)
-        gen_df = churn_by(df, "Gender")
-        fig = go.Figure(go.Bar(
-            x=gen_df["Gender"], y=gen_df["ChurnRate"],
-            marker_color=[color_by_rate(r) for r in gen_df["ChurnRate"]],
-            text=[f"{r:.1f}%" for r in gen_df["ChurnRate"]],
-            textposition="outside", textfont_size=13
+        age_df = churn_by(df, "AgeBand")
+        age_order = ["<30","30–39","40–49","50–59","60+"]
+        age_df["Order"] = age_df["AgeBand"].map({b:i for i,b in enumerate(age_order)})
+        age_df = age_df.sort_values("Order")
+        colors2 = [rate_color(r) for r in age_df["ChurnRate"]]
+        fig2 = go.Figure(go.Bar(
+            x=age_df["AgeBand"].astype(str), y=age_df["ChurnRate"],
+            marker_color=[alpha(c,.25) for c in colors2],
+            marker_line_color=colors2, marker_line_width=1.5,
+            marker_cornerradius=7,
+            text=[f"{r:.1f}%" for r in age_df["ChurnRate"]], textposition="outside",
+            textfont=dict(family=FONT_MONO, size=11),
         ))
-        fig.update_layout(
-            height=260, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, gen_df["ChurnRate"].max() * 1.25])
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    col3, col4 = st.columns(2)
+        fig2.update_traces(textfont_color=[rate_color(r) for r in age_df["ChurnRate"]])
+        fig2.update_layout(**base_layout(290), yaxis_ticksuffix="%", yaxis_range=[0,70])
+        st.markdown(sec("Churn by Age Group"), unsafe_allow_html=True)
+        st.plotly_chart(fig2, use_container_width=True, config=PLOTLY_CFG)
 
     with col3:
-        st.markdown('<div class="section-header">Churn by Age Band</div>', unsafe_allow_html=True)
-        age_df = churn_by(df, "AgeBand")
-        age_df = age_df.sort_values("AgeBand")
-        fig = go.Figure(go.Bar(
-            x=age_df["AgeBand"].astype(str), y=age_df["ChurnRate"],
-            marker_color=[color_by_rate(r) for r in age_df["ChurnRate"]],
-            text=[f"{r:.1f}%" for r in age_df["ChurnRate"]],
-            textposition="outside", textfont_size=12
-        ))
-        fig.update_layout(
-            height=260, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="Age Band",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, age_df["ChurnRate"].max() * 1.25])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown(sec("Gender × Market"), unsafe_allow_html=True)
+        gender_geo = df.groupby(["Geography","Gender"])["Exited"].mean().unstack() * 100
+        rows_html = ""
+        for geo in ["France","Germany","Spain"]:
+            if geo not in gender_geo.index: continue
+            f_r = gender_geo.loc[geo,"Female"] if "Female" in gender_geo.columns else 0
+            m_r = gender_geo.loc[geo,"Male"]   if "Male"   in gender_geo.columns else 0
+            f_cls = "danger" if f_r>=30 else "warn" if f_r>=20 else "ok"
+            m_cls = "danger" if m_r>=30 else "warn" if m_r>=20 else "ok"
+            flag  = {"France":"🇫🇷","Germany":"🇩🇪","Spain":"🇪🇸"}.get(geo,"🏳")
+            rows_html += f"""
+            <div class="geo-row">
+              <span class="geo-name">{flag} {geo}</span>
+              <div class="geo-badges">
+                <span class="badge badge-{f_cls}">F {f_r:.1f}%</span>
+                <span class="badge badge-{m_cls}">M {m_r:.1f}%</span>
+              </div>
+            </div>"""
+        st.markdown(f'<div style="padding:0 4px">{rows_html}</div>', unsafe_allow_html=True)
+        st.markdown(insight("Female Differential",
+            "Germany female churn at 37.6% — the single highest demographic rate. Females churn 8–9 pts above males across all markets.",
+            "ins-rose"), unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Activity Status & Credit Intelligence"), unsafe_allow_html=True)
+    col4, col5 = st.columns(2)
 
     with col4:
-        st.markdown('<div class="section-header">Churn by Tenure</div>', unsafe_allow_html=True)
-        ten_df = churn_by(df, "Tenure").sort_values("Tenure")
-        fig = go.Figure(go.Scatter(
-            x=ten_df["Tenure"], y=ten_df["ChurnRate"],
-            mode="lines+markers", line=dict(color="#2E75B6", width=2.5),
-            marker=dict(size=8, color="#2E75B6"),
-            fill="tozeroy", fillcolor="rgba(46,117,182,0.08)"
-        ))
-        fig.update_layout(
-            height=260, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="Tenure (Years)",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, 35])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        act_df = churn_by(df, "IsActiveMember")
+        act_df["Label"] = act_df["IsActiveMember"].map({1:"Active Member",0:"Inactive Member"})
+        fig3 = go.Figure()
+        for _, row2 in act_df.iterrows():
+            c = rate_color(row2["ChurnRate"])
+            fig3.add_trace(go.Bar(
+                x=[row2["Label"]], y=[row2["ChurnRate"]],
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=1.5,
+                marker_cornerradius=9,
+                text=[f"{row2['ChurnRate']:.1f}%"], textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=14, weight=700),
+                showlegend=False,
+            ))
+        fig3.update_layout(**base_layout(270), yaxis_ticksuffix="%", yaxis_range=[0,38])
+        st.markdown(sec("Active vs Inactive Churn"), unsafe_allow_html=True)
+        st.plotly_chart(fig3, use_container_width=True, config=PLOTLY_CFG)
 
-    st.markdown("""
-    <div class="insight-box">
-    <strong>Key finding:</strong> Germany's churn rate is nearly double France and Spain's,
-    female customers churn 52% more than males, and tenure shows no loyalty effect —
-    churn rates are flat across all 0–10 year tenure bands, ruling out time-based loyalty programmes.
-    </div>""", unsafe_allow_html=True)
+    with col5:
+        cs_df = churn_by(df, "CSBand")
+        cs_order = ["<500","500–599","600–699","700–799","800+"]
+        cs_df["Order"] = cs_df["CSBand"].map({b:i for i,b in enumerate(cs_order)})
+        cs_df = cs_df.dropna(subset=["Order"]).sort_values("Order")
+        fig4 = go.Figure(go.Scatter(
+            x=cs_df["CSBand"].astype(str), y=cs_df["ChurnRate"],
+            mode="lines+markers",
+            line=dict(color=CYAN, width=2.5),
+            fill="tozeroy", fillcolor=alpha(CYAN,.06),
+            marker=dict(color=[rate_color(r) for r in cs_df["ChurnRate"]], size=10, line=dict(width=2, color=DARK_BG)),
+            text=[f"{r:.1f}%" for r in cs_df["ChurnRate"]], textposition="top center",
+            textfont=dict(family=FONT_MONO, size=11),
+        ))
+        fig4.update_layout(**base_layout(270), yaxis_ticksuffix="%", yaxis_range=[17,27])
+        st.markdown(sec("Churn by Credit Score Band"), unsafe_allow_html=True)
+        st.plotly_chart(fig4, use_container_width=True, config=PLOTLY_CFG)
 
 
 # ══════════════════════════════════════════════
-# TAB 2: ENGAGEMENT
+# TAB 2 — ENGAGEMENT
 # ══════════════════════════════════════════════
 with tab2:
-    # KPIs
-    active_churn = df[df["IsActiveMember"] == 1]["Exited"].mean() * 100
-    inactive_churn = df[df["IsActiveMember"] == 0]["Exited"].mean() * 100
-    lift = inactive_churn / active_churn if active_churn > 0 else 0
-    inactive_dis = df[df["EngagementProfile"] == "Inactive Disengaged"]["Exited"].mean() * 100
+    eng_df      = churn_by(df, "EngagementProfile").sort_values("ChurnRate", ascending=False)
+    active_eng  = df[df["EngagementProfile"]=="Active Engaged"]["Exited"].mean()*100  if (df["EngagementProfile"]=="Active Engaged").sum()>0 else 0
+    inactive_dis= df[df["EngagementProfile"]=="Inactive Disengaged"]["Exited"].mean()*100 if (df["EngagementProfile"]=="Inactive Disengaged").sum()>0 else 0
+    inactive_hb = df[df["EngagementProfile"]=="Inactive High-Balance"]["Exited"].mean()*100 if (df["EngagementProfile"]=="Inactive High-Balance").sum()>0 else 0
+    active_lp   = df[df["EngagementProfile"]=="Active Low-Product"]["Exited"].mean()*100 if (df["EngagementProfile"]=="Active Low-Product").sum()>0 else 0
+    spread      = inactive_dis / active_eng if active_eng > 0 else 0
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(kpi_html("Active Member Churn", f"{active_churn:.1f}%", "Engagement benchmark", "kpi-ok"), unsafe_allow_html=True)
-    c2.markdown(kpi_html("Inactive Member Churn", f"{inactive_churn:.1f}%", "Primary risk pool", "kpi-danger"), unsafe_allow_html=True)
-    c3.markdown(kpi_html("Engagement Lift", f"{lift:.2f}×", "Inactive vs active risk", "kpi-warn"), unsafe_allow_html=True)
-    c4.markdown(kpi_html("Inactive Disengaged Churn", f"{inactive_dis:.1f}%", "Highest risk segment", "kpi-danger"), unsafe_allow_html=True)
+    k1,k2,k3,k4,k5 = st.columns(5)
+    k1.markdown(kpi("Active Engaged",    f"{active_eng:.1f}%",  "Lowest risk tier",       EMERALD,"10%"), unsafe_allow_html=True)
+    k2.markdown(kpi("Active Low-Prod",   f"{active_lp:.1f}%",   "Upsell opportunity",      CYAN,   "19%"), unsafe_allow_html=True)
+    k3.markdown(kpi("Inactive Hi-Bal",   f"{inactive_hb:.1f}%", "Premium flight risk",     AMBER,  "28%"), unsafe_allow_html=True)
+    k4.markdown(kpi("Inactive Disengaged",f"{inactive_dis:.1f}%","Highest risk tier",      ROSE,   "37%"), unsafe_allow_html=True)
+    k5.markdown(kpi("Risk Spread",       f"{spread:.1f}×",      "Worst vs best profile",   VIOLET, "70%"), unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    # Engagement profile breakdown
-    st.markdown('<div class="section-header">Engagement Profile — Churn Rate Comparison</div>', unsafe_allow_html=True)
-
-    prof_order = ["Active Engaged", "Other", "Active Low-Product", "Inactive High-Balance", "Inactive Disengaged"]
-    prof_df = churn_by(df, "EngagementProfile")
-    prof_df["Order"] = prof_df["EngagementProfile"].map({p: i for i, p in enumerate(prof_order)})
-    prof_df = prof_df.sort_values("Order")
-
-    col1, col2 = st.columns([3, 2])
+    st.markdown("<br/>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1.6])
 
     with col1:
-        fig = go.Figure()
-        for _, row in prof_df.iterrows():
-            c = PROFILE_COLORS.get(row["EngagementProfile"], "#888")
-            fig.add_trace(go.Bar(
-                x=[row["EngagementProfile"]], y=[row["ChurnRate"]],
-                marker_color=c, showlegend=False,
-                text=[f"{row['ChurnRate']:.1f}%"], textposition="outside", textfont_size=13,
-                name=row["EngagementProfile"]
-            ))
-        fig.update_layout(
-            height=320, margin=dict(l=10, r=10, t=10, b=80),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, prof_df["ChurnRate"].max() * 1.25]),
-            xaxis=dict(tickangle=-15)
+        eng_counts  = df.groupby("EngagementProfile").size().reset_index(name="Count")
+        colors_donut= [ENG_COLORS.get(p,"#888") for p in eng_counts["EngagementProfile"]]
+        fig_d = go.Figure(go.Pie(
+            labels=eng_counts["EngagementProfile"], values=eng_counts["Count"],
+            hole=0.64,
+            marker_colors=[alpha(c,.8) for c in colors_donut],
+            marker_line_color=colors_donut, marker_line_width=2,
+            textinfo="percent",
+            textfont=dict(family=FONT_MONO, size=10, color="#f0f6ff"),
+            hovertemplate="<b>%{label}</b><br>%{value:,} customers<br>%{percent}<extra></extra>",
+        ))
+        fig_d.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=10,r=10,t=10,b=10), height=290,
+            showlegend=True,
+            legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(family=FONT_MONO, color="#3a5070", size=10), orientation="v", x=1, y=0.5),
+            annotations=[dict(text=f"<b>{len(df):,}</b><br><span style='font-size:10px'>customers</span>",
+                              x=0.5, y=0.5, showarrow=False, font=dict(family=FONT_MONO, size=14, color="#f0f6ff"))],
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown(sec("Profile Distribution"), unsafe_allow_html=True)
+        st.plotly_chart(fig_d, use_container_width=True, config=PLOTLY_CFG)
 
     with col2:
-        st.markdown("**Segment Summary**")
-        for _, row in prof_df.iterrows():
-            c = PROFILE_COLORS.get(row["EngagementProfile"], "#888")
-            rate = row["ChurnRate"]
-            risk = "🟢" if rate < 15 else "🟡" if rate < 25 else "🔴"
-            st.markdown(f"""
-            <div style='padding:8px 12px; margin:4px 0; border-left:4px solid {c}; background:#fafafa; border-radius:0 6px 6px 0;'>
-                <div style='font-size:0.8rem; font-weight:600; color:#333;'>{risk} {row['EngagementProfile']}</div>
-                <div style='font-size:0.75rem; color:#666;'>{row['Total']:,} customers · <strong style='color:{c}'>{rate:.1f}%</strong> churn</div>
-            </div>""", unsafe_allow_html=True)
+        eng_sorted = eng_df.sort_values("ChurnRate")
+        fig_eb = go.Figure()
+        for _, row3 in eng_sorted.iterrows():
+            c = ENG_COLORS.get(row3["EngagementProfile"], CYAN)
+            fig_eb.add_trace(go.Bar(
+                y=[row3["EngagementProfile"]], x=[row3["ChurnRate"]], orientation="h",
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=1.5,
+                marker_cornerradius=6,
+                text=[f"  {row3['ChurnRate']:.1f}%  ·  {row3['Total']:,}"],
+                textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=11),
+                showlegend=False,
+            ))
+        fig_eb.update_layout(**base_layout(290), xaxis_ticksuffix="%", xaxis_range=[0,52])
+        st.markdown(sec("Churn Rate by Profile"), unsafe_allow_html=True)
+        st.plotly_chart(fig_eb, use_container_width=True, config=PLOTLY_CFG)
 
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Engagement Risk Matrix"), unsafe_allow_html=True)
+    m1,m2,m3,m4,m5 = st.columns(5)
+    for col_m, lbl, val, s1, s2, clr in [
+        (m1,"Active Engaged",       "9.7%",  "2,588 customers","Lowest risk",    EMERALD),
+        (m2,"Other / Mixed",        "10.5%", "1,549 customers","Near sticky",     CYAN),
+        (m3,"Active Low-Product",   "18.9%", "2,563 customers","Upsell target",   AMBER),
+        (m4,"Inactive High-Balance","27.6%", "779 customers",  "Premium flight",  ORANGE),
+        (m5,"Inactive Disengaged",  "36.7%", "2,521 customers","Highest risk",    ROSE),
+    ]:
+        col_m.markdown(risk_cell(lbl, val, s1, s2, clr), unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Tenure & Activity Deep Dive"), unsafe_allow_html=True)
     col3, col4 = st.columns(2)
 
     with col3:
-        st.markdown('<div class="section-header">Active vs Inactive — Churn Distribution</div>', unsafe_allow_html=True)
-        act_df = churn_by(df, "IsActiveMember")
-        act_df["Label"] = act_df["IsActiveMember"].map({1: "Active", 0: "Inactive"})
-        act_df["Retained%"] = 100 - act_df["ChurnRate"]
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name="Churned", x=act_df["Label"], y=act_df["ChurnRate"],
-                              marker_color="#E24B4A", text=[f"{r:.1f}%" for r in act_df["ChurnRate"]], textposition="inside"))
-        fig.add_trace(go.Bar(name="Retained", x=act_df["Label"], y=act_df["Retained%"],
-                              marker_color="#2E75B6", text=[f"{r:.1f}%" for r in act_df["Retained%"]], textposition="inside"))
-        fig.update_layout(
-            barmode="stack", height=280, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Percentage (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        ten_df = churn_by(df, "Tenure").sort_values("Tenure")
+        fig_ten = go.Figure(go.Scatter(
+            x=ten_df["Tenure"], y=ten_df["ChurnRate"],
+            mode="lines+markers+text",
+            line=dict(color=VIOLET, width=2.5),
+            fill="tozeroy", fillcolor=alpha(VIOLET,.06),
+            marker=dict(color=VIOLET, size=9, line=dict(width=2, color=DARK_BG)),
+            text=[f"{r:.1f}%" for r in ten_df["ChurnRate"]], textposition="top center",
+            textfont=dict(family=FONT_MONO, size=10, color=VIOLET),
+        ))
+        fig_ten.update_layout(**base_layout(260), yaxis_ticksuffix="%", xaxis_title="Years as Customer", yaxis_range=[15,27])
+        st.markdown(sec("Churn by Tenure"), unsafe_allow_html=True)
+        st.plotly_chart(fig_ten, use_container_width=True, config=PLOTLY_CFG)
 
     with col4:
-        st.markdown('<div class="section-header">Geography × Engagement Churn</div>', unsafe_allow_html=True)
-        cross = df.groupby(["Geography", "IsActiveMember"])["Exited"].agg(["sum","count"]).reset_index()
+        cross = df.groupby(["Geography","IsActiveMember"])["Exited"].agg(["sum","count"]).reset_index()
         cross["ChurnRate"] = cross["sum"] / cross["count"] * 100
-        cross["Status"] = cross["IsActiveMember"].map({1: "Active", 0: "Inactive"})
-        fig = px.bar(cross, x="Geography", y="ChurnRate", color="Status",
-                     barmode="group", color_discrete_map={"Active": "#2E75B6", "Inactive": "#E24B4A"},
-                     text=cross["ChurnRate"].apply(lambda x: f"{x:.1f}%"))
-        fig.update_traces(textposition="outside", textfont_size=11)
-        fig.update_layout(
-            height=280, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        cross["Status"]    = cross["IsActiveMember"].map({1:"Active",0:"Inactive"})
+        fig_cross = go.Figure()
+        for status, clr in [("Active", EMERALD), ("Inactive", ROSE)]:
+            d = cross[cross["Status"]==status]
+            fig_cross.add_trace(go.Bar(
+                name=status, x=d["Geography"], y=d["ChurnRate"],
+                marker_color=alpha(clr,.25), marker_line_color=clr, marker_line_width=1.5,
+                marker_cornerradius=5,
+                text=[f"{r:.1f}%" for r in d["ChurnRate"]], textposition="outside",
+                textfont=dict(family=FONT_MONO, color=clr, size=11),
+            ))
+        fig_cross.update_layout(**base_layout(260), barmode="group", yaxis_ticksuffix="%", yaxis_range=[0,44])
+        st.markdown(sec("Geography × Activity Churn"), unsafe_allow_html=True)
+        st.plotly_chart(fig_cross, use_container_width=True, config=PLOTLY_CFG)
 
-    st.markdown("""
-    <div class="alert-box">
-    <strong>Priority action:</strong> The 2,521 Inactive Disengaged customers represent the highest-volume at-risk
-    cohort at 36.65% churn. Customers aged 50–59 face a 56% churn probability — a critical retention emergency
-    requiring dedicated age-segmented product development.
-    </div>""", unsafe_allow_html=True)
+    st.markdown(insight("Priority Action",
+        "The 2,521 Inactive Disengaged customers represent the highest-volume at-risk cohort at 36.65% churn. "
+        "Age 50–59 customers face a 56% churn probability — a retention emergency requiring dedicated age-segmented intervention.",
+        "ins-rose"), unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
-# TAB 3: PRODUCT UTILIZATION
+# TAB 3 — PRODUCTS
 # ══════════════════════════════════════════════
 with tab3:
-    p1_churn = df[df["NumOfProducts"] == 1]["Exited"].mean() * 100 if len(df[df["NumOfProducts"]==1]) > 0 else 0
-    p2_churn = df[df["NumOfProducts"] == 2]["Exited"].mean() * 100 if len(df[df["NumOfProducts"]==2]) > 0 else 0
-    p3_churn = df[df["NumOfProducts"] == 3]["Exited"].mean() * 100 if len(df[df["NumOfProducts"]==3]) > 0 else 0
-    cc_delta = (df[df["HasCrCard"]==0]["Exited"].mean() - df[df["HasCrCard"]==1]["Exited"].mean()) * 100
+    p1_c = df[df["NumOfProducts"]==1]["Exited"].mean()*100 if (df["NumOfProducts"]==1).sum()>0 else 0
+    p2_c = df[df["NumOfProducts"]==2]["Exited"].mean()*100 if (df["NumOfProducts"]==2).sum()>0 else 0
+    p3_c = df[df["NumOfProducts"]>=3]["Exited"].mean()*100 if (df["NumOfProducts"]>=3).sum()>0 else 0
+    cc_d = (df[df["HasCrCard"]==0]["Exited"].mean() - df[df["HasCrCard"]==1]["Exited"].mean())*100
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(kpi_html("1-Product Churn", f"{p1_churn:.1f}%", "5,084 customers", "kpi-warn"), unsafe_allow_html=True)
-    c2.markdown(kpi_html("2-Product Churn", f"{p2_churn:.1f}%", "Optimal sweet spot", "kpi-ok"), unsafe_allow_html=True)
-    c3.markdown(kpi_html("3+ Product Churn", f"{p3_churn:.1f}%", "Product paradox", "kpi-danger"), unsafe_allow_html=True)
-    c4.markdown(kpi_html("CC Stickiness Delta", f"{cc_delta:.2f}pp", "No vs has credit card", "kpi-blue"), unsafe_allow_html=True)
+    k1,k2,k3,k4 = st.columns(4)
+    k1.markdown(kpi("1-Product Churn",    f"{p1_c:.1f}%",    "5,084 customers",   AMBER,   "28%"), unsafe_allow_html=True)
+    k2.markdown(kpi("2-Product Churn",    f"{p2_c:.1f}%",    "Optimal sweet spot", EMERALD, "8%"),  unsafe_allow_html=True)
+    k3.markdown(kpi("3–4 Product Churn",  f"{p3_c:.1f}%",    "Product paradox",    ROSE,    "83%"), unsafe_allow_html=True)
+    k4.markdown(kpi("CC Stickiness Δ",    f"{cc_d:+.2f}pp",  "No CC vs has CC",    CYAN,    "50%"), unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    col1, col2 = st.columns(2)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1.4, 1])
 
     with col1:
-        st.markdown('<div class="section-header">Product Depth Index — Churn by Product Count</div>', unsafe_allow_html=True)
         prod_df = churn_by(df, "NumOfProducts").sort_values("NumOfProducts")
-        colors = [color_by_rate(r) for r in prod_df["ChurnRate"]]
-        fig = go.Figure(go.Bar(
-            x=prod_df["NumOfProducts"].astype(str) + " Product(s)",
-            y=prod_df["ChurnRate"], marker_color=colors,
-            text=[f"{r:.1f}%" for r in prod_df["ChurnRate"]],
-            textposition="outside", textfont_size=13
+        p_colors = [rate_color(r) for r in prod_df["ChurnRate"]]
+        fig_p = go.Figure(go.Bar(
+            x=[f"{int(n)} Product{'s' if int(n)>1 else ''}" for n in prod_df["NumOfProducts"]],
+            y=prod_df["ChurnRate"],
+            marker_color=[alpha(c,.25) for c in p_colors],
+            marker_line_color=p_colors, marker_line_width=2, marker_cornerradius=9,
+            text=[f"{r:.1f}%" for r in prod_df["ChurnRate"]], textposition="outside",
+            textfont=dict(family=FONT_MONO, size=14, weight=700),
         ))
-        fig.update_layout(
-            height=300, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, prod_df["ChurnRate"].max() * 1.2])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        fig_p.update_traces(textfont_color=p_colors)
+        fig_p.update_layout(**base_layout(310), yaxis_ticksuffix="%", yaxis_range=[0,118])
+        st.markdown(sec("Product Depth Index — Churn by Product Count"), unsafe_allow_html=True)
+        st.plotly_chart(fig_p, use_container_width=True, config=PLOTLY_CFG)
 
     with col2:
-        st.markdown('<div class="section-header">Relationship Strength Index (RSI)</div>', unsafe_allow_html=True)
         rsi_df = churn_by(df, "RSI").sort_values("RSI")
-        rsi_df["RSI_Label"] = rsi_df["RSI"].astype(str)
-        rsi_df["Color"] = rsi_df["ChurnRate"].apply(color_by_rate)
-
-        fig = go.Figure()
-        for _, row in rsi_df.iterrows():
-            pct = row["ChurnRate"]
-            count = row["Total"]
-            fig.add_trace(go.Bar(
-                name=f"RSI {row['RSI']}",
-                x=[pct], y=[f"RSI {row['RSI']}"],
-                orientation="h",
-                marker_color=row["Color"],
-                text=[f"  {pct:.1f}%  ({count:,} customers)"],
-                textposition="outside", textfont_size=11,
-                showlegend=False
+        fig_rsi = go.Figure()
+        for _, row4 in rsi_df.iterrows():
+            c = rate_color(row4["ChurnRate"])
+            fig_rsi.add_trace(go.Bar(
+                y=[f"RSI {int(row4['RSI'])}"], x=[row4["ChurnRate"]], orientation="h",
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=1.5,
+                marker_cornerradius=6,
+                text=[f"  {row4['ChurnRate']:.1f}%  ·  {row4['Total']:,}"],
+                textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=11),
+                showlegend=False,
             ))
-        fig.update_layout(
-            height=300, margin=dict(l=10, r=130, t=10, b=10),
-            xaxis_title="Churn Rate (%)", yaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            xaxis=dict(gridcolor="#f0f0f0", range=[0, rsi_df["ChurnRate"].max() * 1.4]),
-            barmode="overlay"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        fig_rsi.update_layout(**base_layout(310), xaxis_ticksuffix="%", xaxis_range=[0,52])
+        st.markdown(sec("RSI → Churn Rate"), unsafe_allow_html=True)
+        st.plotly_chart(fig_rsi, use_container_width=True, config=PLOTLY_CFG)
 
-    # Product × Active cross
-    st.markdown('<div class="section-header">Product Count × Engagement — Combined View</div>', unsafe_allow_html=True)
-    cross2 = df.groupby(["NumOfProducts", "IsActiveMember"])["Exited"].agg(["sum", "count"]).reset_index()
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Product Count × Engagement Matrix"), unsafe_allow_html=True)
+    cross2 = df.groupby(["NumOfProducts","IsActiveMember"])["Exited"].agg(["sum","count"]).reset_index()
     cross2["ChurnRate"] = cross2["sum"] / cross2["count"] * 100
-    cross2["Status"] = cross2["IsActiveMember"].map({1: "Active", 0: "Inactive"})
-    cross2["Products"] = cross2["NumOfProducts"].astype(str) + " Product(s)"
-    fig = px.bar(cross2, x="Products", y="ChurnRate", color="Status",
-                 barmode="group",
-                 color_discrete_map={"Active": "#2E75B6", "Inactive": "#E24B4A"},
-                 text=cross2["ChurnRate"].apply(lambda x: f"{x:.0f}%"))
-    fig.update_traces(textposition="outside", textfont_size=11)
-    fig.update_layout(
-        height=300, margin=dict(l=10, r=10, t=10, b=10),
-        yaxis_title="Churn Rate (%)", xaxis_title="",
-        plot_bgcolor="white", paper_bgcolor="white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    cross2["Status"]    = cross2["IsActiveMember"].map({1:"Active",0:"Inactive"})
+    cross2["Products"]  = cross2["NumOfProducts"].astype(str) + " Product(s)"
+    fig_c2 = go.Figure()
+    for status, clr in [("Active", EMERALD), ("Inactive", ROSE)]:
+        d2 = cross2[cross2["Status"]==status]
+        fig_c2.add_trace(go.Bar(
+            name=status, x=d2["Products"], y=d2["ChurnRate"],
+            marker_color=alpha(clr,.25), marker_line_color=clr, marker_line_width=1.5,
+            marker_cornerradius=5,
+            text=[f"{r:.0f}%" for r in d2["ChurnRate"]], textposition="outside",
+            textfont=dict(family=FONT_MONO, color=clr, size=11),
+        ))
+    fig_c2.update_layout(**base_layout(290), barmode="group", yaxis_ticksuffix="%", yaxis_range=[0,118])
+    st.plotly_chart(fig_c2, use_container_width=True, config=PLOTLY_CFG)
 
-    st.markdown("""
-    <div class="danger-box">
-    <strong>Product Paradox — Regulatory Signal:</strong> Customers with 3 or more products churn at 82.71–100%.
-    The standard assumption that product breadth creates loyalty is decisively contradicted.
-    The optimal customer configuration is 2 products. This pattern is consistent with mis-selling and
-    warrants both internal audit and regulatory attention.
-    </div>""", unsafe_allow_html=True)
+    c_l, c_r = st.columns(2)
+    with c_l:
+        st.markdown(insight("Product Paradox — Regulatory Signal",
+            "3–4 product customers churn at 82–100%. Product breadth does not create loyalty. "
+            "This pattern is consistent with mis-selling and warrants internal audit.",
+            "ins-rose"), unsafe_allow_html=True)
+    with c_r:
+        st.markdown(insight("The 2-Product Sweet Spot",
+            "Moving single-product customers to exactly 2 products is the highest-leverage retention action. "
+            "2-product customers churn at just 7.6% — a 72% reduction vs single-product holders.",
+            "ins-emerald"), unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
-# TAB 4: FINANCIAL ANALYSIS
+# TAB 4 — FINANCIAL
 # ══════════════════════════════════════════════
 with tab4:
-    churned_df = df[df["Exited"] == 1]
-    retained_df = df[df["Exited"] == 0]
+    churned_df  = df[df["Exited"]==1]
+    retained_df = df[df["Exited"]==0]
+    avg_bal_c   = churned_df["Balance"].mean()  if len(churned_df)>0  else 0
+    avg_bal_r   = retained_df["Balance"].mean() if len(retained_df)>0 else 0
+    avg_sal_c   = churned_df["EstimatedSalary"].mean()  if len(churned_df)>0  else 0
+    avg_sal_r   = retained_df["EstimatedSalary"].mean() if len(retained_df)>0 else 0
+    at_risk_n   = df["IsAtRisk"].sum()
+    at_risk_cr  = df[df["IsAtRisk"]==1]["Exited"].mean()*100 if at_risk_n>0 else 0
+    bal_gap_pct = ((avg_bal_c - avg_bal_r) / avg_bal_r * 100) if avg_bal_r>0 else 0
 
-    avg_bal_c  = churned_df["Balance"].mean() if len(churned_df) > 0 else 0
-    avg_sal_c  = churned_df["EstimatedSalary"].mean() if len(churned_df) > 0 else 0
-    avg_age_c  = churned_df["Age"].mean() if len(churned_df) > 0 else 0
-    at_risk_n  = df["IsAtRisk"].sum()
-    at_risk_cr = df[df["IsAtRisk"] == 1]["Exited"].mean() * 100 if at_risk_n > 0 else 0
+    k1,k2,k3,k4 = st.columns(4)
+    k1.markdown(kpi("Avg Bal — Churned",  f"€{avg_bal_c:,.0f}",         f"+{bal_gap_pct:.0f}% vs retained", ROSE,    "65%"), unsafe_allow_html=True)
+    k2.markdown(kpi("Avg Bal — Retained", f"€{avg_bal_r:,.0f}",         "Reference baseline",                EMERALD, "52%"), unsafe_allow_html=True)
+    k3.markdown(kpi("At-Risk Premium",    f"{at_risk_n:,}",              f"{at_risk_cr:.1f}% churn",          AMBER,   "45%"), unsafe_allow_html=True)
+    k4.markdown(kpi("Salary Parity",      f"€{abs(avg_sal_c-avg_sal_r):,.0f}", "Churned–retained gap",       CYAN,    "5%"),  unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(kpi_html("Avg Balance — Churned", f"€{avg_bal_c:,.0f}", "25% above retained avg", "kpi-danger"), unsafe_allow_html=True)
-    c2.markdown(kpi_html("Avg Balance — Retained", f"€{retained_df['Balance'].mean():,.0f}", "Reference baseline", "kpi-ok"), unsafe_allow_html=True)
-    c3.markdown(kpi_html("At-Risk Premium Count", f"{at_risk_n:,}", f"{at_risk_cr:.1f}% churn rate", "kpi-danger"), unsafe_allow_html=True)
-    c4.markdown(kpi_html("Avg Age — Churned", f"{avg_age_c:.1f} yrs", f"vs {retained_df['Age'].mean():.1f} retained", "kpi-warn"), unsafe_allow_html=True)
-
-    st.markdown("---")
-
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Balance Distribution Intelligence"), unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="section-header">Churn Rate by Balance Band</div>', unsafe_allow_html=True)
-        bal_order = ["Zero", "€1–50K", "€50–100K", "€100–150K", "€150K+"]
-        bal_df = churn_by(df, "BalanceBand")
-        bal_df["Order"] = bal_df["BalanceBand"].map({b: i for i, b in enumerate(bal_order)})
-        bal_df = bal_df.sort_values("Order")
-        fig = go.Figure(go.Bar(
-            x=bal_df["BalanceBand"].astype(str), y=bal_df["ChurnRate"],
-            marker_color=[color_by_rate(r) for r in bal_df["ChurnRate"]],
-            text=[f"{r:.1f}%" for r in bal_df["ChurnRate"]],
-            textposition="outside", textfont_size=12
+        bal_order = ["Zero","€1–50K","€50–100K","€100–150K","€150K+"]
+        bal_df2   = churn_by(df, "BalanceBand")
+        bal_df2["Order"] = bal_df2["BalanceBand"].map({b:i for i,b in enumerate(bal_order)})
+        bal_df2   = bal_df2.dropna(subset=["Order"]).sort_values("Order")
+        b_colors  = [rate_color(r) for r in bal_df2["ChurnRate"]]
+        fig_bal   = go.Figure(go.Bar(
+            x=bal_df2["BalanceBand"].astype(str), y=bal_df2["ChurnRate"],
+            marker_color=[alpha(c,.25) for c in b_colors],
+            marker_line_color=b_colors, marker_line_width=1.5, marker_cornerradius=7,
+            text=[f"{r:.1f}%" for r in bal_df2["ChurnRate"]], textposition="outside",
+            textfont=dict(family=FONT_MONO, size=12, weight=700),
         ))
-        fig.update_layout(
-            height=280, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, bal_df["ChurnRate"].max() * 1.25])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        fig_bal.update_traces(textfont_color=b_colors)
+        fig_bal.update_layout(**base_layout(290), yaxis_ticksuffix="%", yaxis_range=[0,46])
+        st.markdown(sec("Churn Rate by Balance Band"), unsafe_allow_html=True)
+        st.plotly_chart(fig_bal, use_container_width=True, config=PLOTLY_CFG)
 
     with col2:
-        st.markdown('<div class="section-header">Financial Profile — Churned vs Retained</div>', unsafe_allow_html=True)
-        metrics = ["Avg Balance", "Avg Est. Salary"]
-        churned_vals = [avg_bal_c, avg_sal_c]
-        retained_vals = [retained_df["Balance"].mean(), retained_df["EstimatedSalary"].mean()]
+        metrics = ["Avg Balance","Avg Est. Salary"]
+        c_vals  = [avg_bal_c, avg_sal_c]
+        r_vals  = [avg_bal_r, avg_sal_r]
+        fig_cmp = go.Figure()
+        fig_cmp.add_trace(go.Bar(
+            name="Churned", x=metrics, y=c_vals,
+            marker_color=alpha(ROSE,.25), marker_line_color=ROSE, marker_line_width=1.5,
+            marker_cornerradius=6,
+            text=[f"€{v:,.0f}" for v in c_vals], textposition="outside",
+            textfont=dict(family=FONT_MONO, color=ROSE, size=11),
+        ))
+        fig_cmp.add_trace(go.Bar(
+            name="Retained", x=metrics, y=r_vals,
+            marker_color=alpha(EMERALD,.25), marker_line_color=EMERALD, marker_line_width=1.5,
+            marker_cornerradius=6,
+            text=[f"€{v:,.0f}" for v in r_vals], textposition="outside",
+            textfont=dict(family=FONT_MONO, color=EMERALD, size=11),
+        ))
+        layout_cmp = base_layout(290)
+        layout_cmp["yaxis"]["tickprefix"] = "€"
+        layout_cmp["yaxis"]["range"]      = [0, max(c_vals + r_vals) * 1.25]
+        fig_cmp.update_layout(**layout_cmp, barmode="group")
+        st.markdown(sec("Churned vs Retained — Financial Profile"), unsafe_allow_html=True)
+        st.plotly_chart(fig_cmp, use_container_width=True, config=PLOTLY_CFG)
 
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name="Churned", x=metrics, y=churned_vals, marker_color="#E24B4A",
-                              text=[f"€{v:,.0f}" for v in churned_vals], textposition="outside", textfont_size=11))
-        fig.add_trace(go.Bar(name="Retained", x=metrics, y=retained_vals, marker_color="#2E75B6",
-                              text=[f"€{v:,.0f}" for v in retained_vals], textposition="outside", textfont_size=11))
-        fig.update_layout(
-            barmode="group", height=280, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="€ Amount", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Balance Distribution — Churned vs Retained"), unsafe_allow_html=True)
+    nz_c = churned_df[churned_df["Balance"]>0]["Balance"]
+    nz_r = retained_df[retained_df["Balance"]>0]["Balance"]
+    fig_hist = go.Figure()
+    if len(nz_c)>0:
+        fig_hist.add_trace(go.Histogram(
+            x=nz_c, name="Churned", opacity=0.65,
+            marker_color=ROSE, nbinsx=50, histnorm="percent",
+        ))
+    if len(nz_r)>0:
+        fig_hist.add_trace(go.Histogram(
+            x=nz_r, name="Retained", opacity=0.5,
+            marker_color=EMERALD, nbinsx=50, histnorm="percent",
+        ))
+    fig_hist.update_layout(**base_layout(270), barmode="overlay",
+        xaxis_tickprefix="€", xaxis_title="Account Balance (€)", yaxis_title="% of Customers")
+    st.plotly_chart(fig_hist, use_container_width=True, config=PLOTLY_CFG)
 
-    # Balance distribution
-    st.markdown('<div class="section-header">Balance Distribution — Churned vs Retained</div>', unsafe_allow_html=True)
-    fig = go.Figure()
-    nonzero_c = churned_df[churned_df["Balance"] > 0]["Balance"]
-    nonzero_r = retained_df[retained_df["Balance"] > 0]["Balance"]
-    if len(nonzero_c) > 0:
-        fig.add_trace(go.Histogram(x=nonzero_c, name="Churned", opacity=0.65,
-                                    marker_color="#E24B4A", nbinsx=40, histnorm="percent"))
-    if len(nonzero_r) > 0:
-        fig.add_trace(go.Histogram(x=nonzero_r, name="Retained", opacity=0.65,
-                                    marker_color="#2E75B6", nbinsx=40, histnorm="percent"))
-    fig.update_layout(
-        barmode="overlay", height=260, margin=dict(l=10, r=10, t=10, b=10),
-        xaxis_title="Account Balance (€)", yaxis_title="% of Customers",
-        plot_bgcolor="white", paper_bgcolor="white",
-        yaxis=dict(gridcolor="#f0f0f0"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("""
-    <div class="danger-box">
-    <strong>Premium balance flight risk:</strong> Churned customers hold €91,109 average balances —
-    25% above the €72,745 retained average. Salary is nearly identical across groups, ruling out
-    income as a churn driver. The 2,356 inactive high-balance customers at 32.77% churn represent
-    several hundred million euros in potential AUM flight.
-    </div>""", unsafe_allow_html=True)
+    c_l, c_r = st.columns(2)
+    with c_l:
+        st.markdown(insight("Premium Balance Flight Risk",
+            f"Churned customers hold €{avg_bal_c:,.0f} average balance — {bal_gap_pct:.0f}% above the €{avg_bal_r:,.0f} retained average. "
+            f"{at_risk_n:,} inactive high-balance customers at {at_risk_cr:.1f}% churn. Estimated AUM at risk: €300M+.",
+            "ins-rose"), unsafe_allow_html=True)
+    with c_r:
+        st.markdown(insight("Salary Is Not the Driver",
+            "Salary is virtually identical between churned (€101,466) and retained (€99,738) customers — a €1,728 gap. "
+            "Engagement, not income, is the primary churn driver. Salary-based targeting will not work.",
+            "ins-cyan"), unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
-# TAB 5: RETENTION STRENGTH
+# TAB 5 — RETENTION
 # ══════════════════════════════════════════════
 with tab5:
-    sticky_cr = df[df["IsSticky"] == 1]["Exited"].mean() * 100 if df["IsSticky"].sum() > 0 else 0
-    atrisk_cr = df[df["IsAtRisk"] == 1]["Exited"].mean() * 100 if df["IsAtRisk"].sum() > 0 else 0
-    overall_cr = churn_rate(df)
-    gap = atrisk_cr / sticky_cr if sticky_cr > 0 else 0
+    sticky_df  = df[df["IsSticky"]==1]
+    atrisk_df  = df[df["IsAtRisk"]==1]
+    sticky_cr  = sticky_df["Exited"].mean()*100  if len(sticky_df)>0  else 0
+    atrisk_cr  = atrisk_df["Exited"].mean()*100  if len(atrisk_df)>0  else 0
+    gap_mult   = atrisk_cr / sticky_cr if sticky_cr>0 else 0
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(kpi_html("Sticky Customer Churn", f"{sticky_cr:.1f}%", f"{df['IsSticky'].sum():,} sticky customers", "kpi-ok"), unsafe_allow_html=True)
-    c2.markdown(kpi_html("At-Risk Premium Churn", f"{atrisk_cr:.1f}%", f"{df['IsAtRisk'].sum():,} at-risk customers", "kpi-danger"), unsafe_allow_html=True)
-    c3.markdown(kpi_html("Retention Gap", f"{gap:.1f}×", "Sticky vs at-risk differential", "kpi-warn"), unsafe_allow_html=True)
-    c4.markdown(kpi_html("Portfolio Churn", f"{overall_cr:.1f}%", "Current filter view", "kpi-blue"), unsafe_allow_html=True)
+    k1,k2,k3,k4 = st.columns(4)
+    k1.markdown(kpi("Sticky Churn",   f"{sticky_cr:.1f}%", f"{len(sticky_df):,} sticky customers",    EMERALD, "9%"),          unsafe_allow_html=True)
+    k2.markdown(kpi("At-Risk Churn",  f"{atrisk_cr:.1f}%", f"{len(atrisk_df):,} at-risk customers",  ROSE,    "33%"),         unsafe_allow_html=True)
+    k3.markdown(kpi("Retention Gap",  f"{gap_mult:.1f}×",  "Sticky vs at-risk differential",          AMBER,   "70%"),         unsafe_allow_html=True)
+    k4.markdown(kpi("Portfolio Churn",f"{cr_now:.1f}%",    "Current filter view",                     CYAN,    f"{cr_now:.0f}%"), unsafe_allow_html=True)
 
-    st.markdown("---")
-
+    st.markdown("<br/>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="section-header">Sticky vs At-Risk vs Overall</div>', unsafe_allow_html=True)
-        segments = ["Sticky\n(Active+2prod+CC)", "At-Risk Premium\n(Inactive+>€100K)", "Portfolio\nAverage"]
-        rates = [sticky_cr, atrisk_cr, overall_cr]
-        colors = [COLOR_MAP["ok"], COLOR_MAP["danger"], COLOR_MAP["blue"]]
-        fig = go.Figure(go.Bar(
-            x=segments, y=rates, marker_color=colors,
-            text=[f"{r:.1f}%" for r in rates],
-            textposition="outside", textfont_size=13
-        ))
-        fig.update_layout(
-            height=300, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, max(rates) * 1.3])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        segs      = ["Sticky<br>(Active+2P+CC)", "Portfolio<br>Average", "At-Risk<br>(Inactive+€100K+)"]
+        rates     = [sticky_cr, cr_now, atrisk_cr]
+        seg_clrs  = [EMERALD, CYAN, ROSE]
+        fig_s = go.Figure()
+        for seg, rate, c in zip(segs, rates, seg_clrs):
+            fig_s.add_trace(go.Bar(
+                x=[seg], y=[rate],
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=2,
+                marker_cornerradius=9,
+                text=[f"{rate:.1f}%"], textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=14, weight=700),
+                showlegend=False,
+            ))
+        fig_s.update_layout(**base_layout(310), yaxis_ticksuffix="%", yaxis_range=[0,44])
+        st.markdown(sec("Sticky vs At-Risk vs Portfolio"), unsafe_allow_html=True)
+        st.plotly_chart(fig_s, use_container_width=True, config=PLOTLY_CFG)
 
     with col2:
-        st.markdown('<div class="section-header">RSI Score vs Churn Rate</div>', unsafe_allow_html=True)
         rsi_df2 = churn_by(df, "RSI").sort_values("RSI")
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
+        fig_r2  = go.Figure()
+        fig_r2.add_trace(go.Scatter(
             x=rsi_df2["RSI"], y=rsi_df2["ChurnRate"],
             mode="lines+markers+text",
-            line=dict(color="#1F4E79", width=3),
-            marker=dict(size=14, color=[color_by_rate(r) for r in rsi_df2["ChurnRate"]],
-                        line=dict(width=2, color="white")),
+            line=dict(color=AMBER, width=3),
+            fill="tozeroy", fillcolor=alpha(AMBER,.07),
+            marker=dict(
+                color=[rate_color(r) for r in rsi_df2["ChurnRate"]],
+                size=14, line=dict(width=2.5, color=DARK_BG)
+            ),
             text=[f"{r:.1f}%" for r in rsi_df2["ChurnRate"]],
-            textposition="top center", textfont_size=12,
-            fill="tozeroy", fillcolor="rgba(31,78,121,0.07)"
+            textposition="top center",
+            textfont=dict(family=FONT_MONO, size=12, color=AMBER),
         ))
-        fig.update_layout(
-            height=300, margin=dict(l=10, r=10, t=10, b=10),
-            yaxis_title="Churn Rate (%)", xaxis_title="RSI Score (1=Low → 4=High)",
-            plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(gridcolor="#f0f0f0", range=[0, rsi_df2["ChurnRate"].max() * 1.3]),
-            xaxis=dict(tickvals=[1, 2, 3, 4])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # ── FIX: merge xaxis to avoid duplicate key conflict ──
+        _layout_r2 = base_layout(310)
+        _layout_r2["xaxis"].update(dict(title="RSI Score (1=Low → 4=High)", tickvals=[1,2,3,4]))
+        fig_r2.update_layout(**_layout_r2, yaxis_ticksuffix="%", yaxis_range=[0,44])
+        st.markdown(sec("RSI Score → Churn Rate"), unsafe_allow_html=True)
+        st.plotly_chart(fig_r2, use_container_width=True, config=PLOTLY_CFG)
 
-    # Credit score vs churn
-    st.markdown('<div class="section-header">Credit Score Band vs Churn Rate</div>', unsafe_allow_html=True)
-    cs_df = churn_by(df, "CSBand")
-    cs_order = ["<500", "500–599", "600–699", "700–799", "800+"]
-    cs_df["Order"] = cs_df["CSBand"].map({b: i for i, b in enumerate(cs_order)})
-    cs_df = cs_df.sort_values("Order")
-    fig = go.Figure(go.Bar(
-        x=cs_df["CSBand"].astype(str), y=cs_df["ChurnRate"],
-        marker_color=[color_by_rate(r) for r in cs_df["ChurnRate"]],
-        text=[f"{r:.1f}%" for r in cs_df["ChurnRate"]],
-        textposition="outside", textfont_size=12
-    ))
-    fig.update_layout(
-        height=240, margin=dict(l=10, r=10, t=10, b=10),
-        yaxis_title="Churn Rate (%)", xaxis_title="Credit Score Band",
-        plot_bgcolor="white", paper_bgcolor="white",
-        yaxis=dict(gridcolor="#f0f0f0", range=[0, cs_df["ChurnRate"].max() * 1.3])
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    col3, col4 = st.columns(2)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    col3, col4 = st.columns([1, 1.4])
 
     with col3:
-        st.markdown("""
-        <div class="insight-box">
-        <strong>Sticky customer profile:</strong> Customers who are active + hold 2+ products +
-        own a credit card churn at just 9.1% — 4× better than at-risk premium customers.
-        Scaling this profile across the base is the single highest-ROI retention action available.
-        </div>""", unsafe_allow_html=True)
+        cs_df2 = churn_by(df, "CSBand")
+        cs_order2 = ["<500","500–599","600–699","700–799","800+"]
+        cs_df2["Order"] = cs_df2["CSBand"].map({b:i for i,b in enumerate(cs_order2)})
+        cs_df2 = cs_df2.dropna(subset=["Order"]).sort_values("Order")
+        cs_c2  = [rate_color(r) for r in cs_df2["ChurnRate"]]
+        fig_cs2 = go.Figure(go.Bar(
+            x=cs_df2["CSBand"].astype(str), y=cs_df2["ChurnRate"],
+            marker_color=[alpha(c,.25) for c in cs_c2],
+            marker_line_color=cs_c2, marker_line_width=1.5, marker_cornerradius=6,
+            text=[f"{r:.1f}%" for r in cs_df2["ChurnRate"]], textposition="outside",
+            textfont=dict(family=FONT_MONO, size=11),
+        ))
+        fig_cs2.update_traces(textfont_color=cs_c2)
+        fig_cs2.update_layout(**base_layout(250), yaxis_ticksuffix="%", yaxis_range=[15,30])
+        st.markdown(sec("Credit Score vs Churn"), unsafe_allow_html=True)
+        st.plotly_chart(fig_cs2, use_container_width=True, config=PLOTLY_CFG)
 
     with col4:
-        st.markdown("""
-        <div class="alert-box">
-        <strong>RSI threshold:</strong> Customers with RSI ≥ 3 churn at 15.9% or less.
-        Customers with RSI ≤ 2 churn at 29–35%. Every one-point RSI improvement reduces
-        churn risk by approximately 8–12 percentage points.
-        </div>""", unsafe_allow_html=True)
+        eng_ret    = churn_by(df, "EngagementProfile").sort_values("ChurnRate")
+        fig_ret    = go.Figure()
+        for _, row5 in eng_ret.iterrows():
+            c = ENG_COLORS.get(row5["EngagementProfile"], CYAN)
+            fig_ret.add_trace(go.Bar(
+                y=[row5["EngagementProfile"]], x=[row5["ChurnRate"]], orientation="h",
+                marker_color=alpha(c,.25), marker_line_color=c, marker_line_width=1.5,
+                marker_cornerradius=5,
+                text=[f"  {row5['ChurnRate']:.1f}%  ·  {row5['Total']:,}"],
+                textposition="outside",
+                textfont=dict(family=FONT_MONO, color=c, size=11),
+                showlegend=False,
+            ))
+        fig_ret.update_layout(**base_layout(250), xaxis_ticksuffix="%", xaxis_range=[0,52])
+        st.markdown(sec("Full Retention Profile Map"), unsafe_allow_html=True)
+        st.plotly_chart(fig_ret, use_container_width=True, config=PLOTLY_CFG)
 
-    # At-risk customer table
-    st.markdown('<div class="section-header">High-Value Disengaged Customer Detector</div>', unsafe_allow_html=True)
-    st.caption("Showing inactive customers with balance > €75,000 — sorted by balance descending")
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("Strategic Retention Recommendations"), unsafe_allow_html=True)
+    r1,r2 = st.columns(2)
+    r3,r4 = st.columns(2)
+    with r1:
+        st.markdown(insight("Priority 1 — Protect Sticky Customers",
+            f"{len(sticky_df):,} customers with RSI=4 churn at just {sticky_cr:.1f}%. "
+            "White-glove service and proactive engagement. Each defection costs 3× more to replace.",
+            "ins-emerald"), unsafe_allow_html=True)
+    with r2:
+        st.markdown(insight("Priority 2 — Emergency At-Risk Re-engagement",
+            f"{len(atrisk_df):,} inactive customers with >€100K balance at {atrisk_cr:.1f}% churn. "
+            "Immediate relationship manager outreach could save 770+ accounts worth €100M+ AUM.",
+            "ins-rose"), unsafe_allow_html=True)
+    with r3:
+        st.markdown(insight("Priority 3 — 2-Product Migration Campaign",
+            "5,084 single-product customers at 27.7% churn. Target Active Low-Product (2,563 customers, 18.9%) "
+            "for cross-sell — proven 72% churn reduction in the 2-product tier.",
+            "ins-amber"), unsafe_allow_html=True)
+    with r4:
+        st.markdown(insight("Priority 4 — Germany & Female Segment Focus",
+            "Germany female churn at 37.6% — highest in the dataset. Targeted outreach concentrates "
+            "retention resources on 600–700 highest-risk individuals with maximum ROI.",
+            "ins-violet"), unsafe_allow_html=True)
 
-    at_risk_display = df[
-        (df["IsActiveMember"] == 0) & (df["Balance"] > 75000)
-    ][["CustomerId", "Geography", "Gender", "Age", "Balance", "NumOfProducts",
-       "HasCrCard", "RSI", "EngagementProfile", "Exited"]].copy()
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(sec("High-Value Disengaged Customer Detector"), unsafe_allow_html=True)
+    st.caption("Inactive customers with balance > €75,000 — sorted by balance descending · Top 50")
 
-    at_risk_display = at_risk_display.sort_values("Balance", ascending=False).head(50)
-    at_risk_display.columns = ["Customer ID", "Country", "Gender", "Age", "Balance (€)",
-                                "Products", "Has CC", "RSI", "Engagement Profile", "Churned"]
-    at_risk_display["Balance (€)"] = at_risk_display["Balance (€)"].apply(lambda x: f"€{x:,.0f}")
-    at_risk_display["Churned"] = at_risk_display["Churned"].map({1: "✗ Exited", 0: "✓ Active"})
-
-    st.dataframe(at_risk_display, use_container_width=True, height=360)
+    at_risk_tbl = df[
+        (df["IsActiveMember"]==0) & (df["Balance"]>75000)
+    ][["CustomerId","Geography","Gender","Age","Balance","NumOfProducts","HasCrCard","RSI","EngagementProfile","Exited"]].copy()
+    at_risk_tbl = at_risk_tbl.sort_values("Balance", ascending=False).head(50)
+    at_risk_tbl.columns = ["Customer ID","Country","Gender","Age","Balance (€)","Products","Has CC","RSI","Profile","Churned"]
+    at_risk_tbl["Balance (€)"] = at_risk_tbl["Balance (€)"].apply(lambda x: f"€{x:,.0f}")
+    at_risk_tbl["Churned"]     = at_risk_tbl["Churned"].map({1:"✗ Exited",0:"✓ Active"})
+    st.dataframe(at_risk_tbl, use_container_width=True, height=340)
 
 # ─────────────────────────────────────────────
 # Footer
 # ─────────────────────────────────────────────
-st.markdown("---")
 st.markdown("""
-<div style='text-align:center; font-size:0.8rem; color:#aaa; padding: 8px 0 16px;'>
-    European Bank Churn Intelligence Platform &nbsp;·&nbsp;
-    10,000 Customer Records &nbsp;·&nbsp;
-    France · Germany · Spain &nbsp;·&nbsp;
-    For Academic & Policy Use Only
+<div class="dash-footer">
+  European Bank Churn Intelligence Platform &nbsp;·&nbsp;
+  10,000 Customer Records &nbsp;·&nbsp;
+  France · Germany · Spain &nbsp;·&nbsp;
+  FY 2025 &nbsp;·&nbsp; For Academic & Portfolio Use Only
 </div>
 """, unsafe_allow_html=True)
